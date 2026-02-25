@@ -2034,13 +2034,7 @@
   }
 
   function irACentroAyudaDesdePortal() {
-    cambiarVista('vista-ayuda');
-    /* Limpia la barra de búsqueda al entrar desde el portal base */
-    const searchInput = document.getElementById('global-search');
-    const clearBtn    = document.getElementById('search-clear');
-    if (searchInput) searchInput.value = '';
-    if (clearBtn)    clearBtn.classList.remove('visible');
-    renderPortal('');
+    window.open(location.pathname + '?vista=ayuda', '_blank');
   }
   function irAPazSalvo()  { cambiarVista('vista-paz'); nuevaConsultaPaz(); }
   function irAFactura()   { cambiarVista('vista-factura'); limpiarFactura(); }
@@ -2121,8 +2115,10 @@
     /* Cierra cualquier popup abierto */
     document.querySelectorAll('.mod-ayudas-popup').forEach(p => p.classList.remove('show'));
 
-    /* Navega a la vista del centro de ayuda */
-    cambiarVista('vista-ayuda');
+    /* Abre en nueva pestaña con parámetros */
+    const params = new URLSearchParams({ vista: 'ayuda', tab: tab, filtro: filtro });
+    window.open(location.pathname + '?' + params.toString(), '_blank');
+    return;
 
     /* Aplica la pestaña correcta */
     tabActual = tab;
@@ -3279,5 +3275,41 @@
 </script>
 <!-- SheetJS — Exportación a Excel (.xlsx) desde el navegador -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+  /* ══ Inicialización por parámetros de URL ══
+     Permite abrir el Centro de Ayuda directamente desde otra pestaña
+     usando ?vista=ayuda  (y opcionalmente &tab=manuales&filtro=Paz y Salvo) */
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const vista  = params.get('vista');
+    if (vista === 'ayuda') {
+      const tab    = params.get('tab')    || 'manuales';
+      const filtro = params.get('filtro') || '';
+
+      cambiarVista('vista-ayuda');
+
+      /* Oculta la barra "Volver al Portal" — no aplica en pestaña independiente */
+      const backBar = document.querySelector('#vista-ayuda .back-bar');
+      if (backBar) backBar.style.display = 'none';
+
+      /* Aplica la pestaña correcta */
+      tabActual = tab;
+      const tabManuales = document.getElementById('tab-manuales');
+      const tabVideos   = document.getElementById('tab-videos');
+      if (tabManuales) tabManuales.classList.toggle('active', tab === 'manuales');
+      if (tabVideos)   tabVideos.classList.toggle('active',   tab === 'videos');
+
+      /* Aplica filtro si viene uno */
+      const searchInput = document.getElementById('global-search');
+      const clearBtn    = document.getElementById('search-clear');
+      if (searchInput) {
+        searchInput.value = filtro;
+        if (clearBtn) clearBtn.classList.toggle('visible', filtro.length > 0);
+      }
+      renderPortal(filtro);
+    }
+  })();
+</script>
 </body>
 </html>
